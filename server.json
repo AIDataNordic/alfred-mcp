@@ -1,0 +1,15 @@
+{
+  "$schema": "https://modelcontextprotocol.io/schema/server.json",
+  "name": "alfred-mcp",
+  "version": "1.0.0",
+  "description": "Alfred — Nordic Due Diligence MCP. One tool: due_diligence_report(company). Alfred handles all search strategy internally.",
+  "license": "MIT",
+  "homepage": "https://aidatanorge.no",
+  "repository": "https://github.com/AIDataNordic/alfred-mcp",
+  "tools": [
+    {
+      "name": "due_diligence_report",
+      "description": "Get comprehensive due diligence data for any Nordic listed company. Returns structured data grouped by section: financials, risk factors, sector macro, power prices, and recent news."
+    }
+  ]
+}

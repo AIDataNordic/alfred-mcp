@@ -1,0 +1,21 @@
+name: alfred-mcp
+description: >
+  Alfred is a due diligence research assistant for Nordic listed companies
+  (Norway, Sweden, Denmark, Finland, Iceland). Call due_diligence_report with
+  a company name to receive structured data covering financials, risk factors,
+  sector macro, and recent news. Alfred handles all search strategy internally —
+  no query formulation needed. Your agent synthesizes the returned data into a report.
+version: "1.0.0"
+license: MIT
+
+startCommand:
+  type: http
+  url: "https://alfred.aidatanorge.no/mcp"
+
+configSchema:
+  type: object
+  properties:
+    ALFRED_UPSTREAM_URL:
+      type: string
+      description: "URL of the upstream Nordic Financial MCP server"
+      default: "https://mcp.aidatanorge.no/mcp"
