@@ -229,13 +229,21 @@ def _generate_power_sections(periods: list, power_zones: list) -> list[dict]:
 
 
 def _generate_xbrl_sections(company: str, ticker: str) -> list[dict]:
-    """Dedicated sections that fetch directly from xbrl_esef, bypassing newsweb competition."""
+    """Dedicated sections that fetch directly from XBRL sources, bypassing newsweb competition."""
     return [
         {
             "name":           "xbrl_financials",
             "query":          f"{company} revenue operating profit EBIT net income annual report",
             "report_type":    "annual_report",
             "source":         "xbrl_esef",
+            "limit":          5,
+            "company_filter": True,
+        },
+        {
+            "name":           "xbrl_summary",
+            "query":          f"{company} revenue assets equity annual financial summary",
+            "report_type":    "financial_summary",
+            "source":         "extracted_xbrl",
             "limit":          5,
             "company_filter": True,
         },
@@ -274,10 +282,18 @@ def _strip_json(text: str) -> str:
 
 
 async def _probe_ticker(upstream: "Client", company: str) -> str | None:
-    """Look up the actual ticker from Qdrant before planning."""
+    """Look up the actual ticker from Qdrant before planning.
+
+    Prefers tickers from XBRL sources (xbrl_esef, extracted_xbrl) over newsweb/press
+    releases, because XBRL uses the authoritative exchange ticker (e.g. GCCNOK not GCC).
+    """
     try:
-        result = await upstream.call_tool("search_filings", {"query": company, "limit": 5})
+        result = await upstream.call_tool("search_filings", {"query": company, "limit": 10})
         rows = _parse_tool_result(result)
+        xbrl_sources = {"xbrl_esef", "extracted_xbrl"}
+        xbrl_tickers = [r.get("ticker") for r in rows if r.get("ticker") and r.get("source") in xbrl_sources]
+        if xbrl_tickers:
+            return max(set(xbrl_tickers), key=xbrl_tickers.count)
         tickers = [r.get("ticker") for r in rows if r.get("ticker")]
         if not tickers:
             return None
