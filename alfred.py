@@ -276,7 +276,7 @@ async def _plan(company: str, confirmed_ticker: str | None = None) -> dict:
     response = await client.messages.create(
         model="claude-haiku-4-5-20251001",
         max_tokens=1500,
-        system=_PLAN_SYSTEM,
+        system=[{"type": "text", "text": _PLAN_SYSTEM, "cache_control": {"type": "ephemeral"}}],
         messages=[{"role": "user", "content": user_msg}],
     )
     return json.loads(_strip_json(response.content[0].text))
@@ -337,9 +337,10 @@ async def due_diligence_report(
         macro_factors = plan.get("macro_factors") or SECTOR_MACRO_DEFAULTS.get(sector, [])
 
         # Step 4: extract financial periods and generate aligned macro + power sections
+        # Use all periods for macro, but only the most recent for power (reduces section count)
         periods         = _extract_periods(haiku_sections)
-        macro_sections  = _generate_macro_sections(periods, macro_factors)
-        power_sections  = _generate_power_sections(periods, power_zones)
+        macro_sections  = _generate_macro_sections(periods[:1], macro_factors)
+        power_sections  = _generate_power_sections(periods[:1], power_zones)
 
         all_sections = haiku_sections + macro_sections + power_sections
 
