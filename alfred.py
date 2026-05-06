@@ -303,6 +303,16 @@ async def _probe(upstream: "Client", company: str) -> dict:
         ticker = max(set(xbrl_tickers), key=xbrl_tickers.count)
     elif all_tickers:
         ticker = max(set(all_tickers), key=all_tickers.count)
+    else:
+        # Fallback for companies whose press releases lack ticker (e.g. Finnish nasdaq_fi).
+        # Search directly in xbrl_esef where tickers are always populated.
+        try:
+            fb = await upstream.call_tool("search_filings", {"query": company, "source": "xbrl_esef", "limit": 5})
+            fb_tickers = [r.get("ticker") for r in _parse_tool_result(fb) if r.get("ticker")]
+            if fb_tickers:
+                ticker = max(set(fb_tickers), key=fb_tickers.count)
+        except Exception:
+            pass
 
     fiscal_years = sorted({int(r["fiscal_year"]) for r in rows if r.get("fiscal_year")}, reverse=True)
     report_types = {r["report_type"] for r in rows if r.get("report_type")}
